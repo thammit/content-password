@@ -1,0 +1,9 @@
+<Files "ext_typoscript_setup.txt">
+deny from all
+</Files>
+<Files "ext_typoscript_config.txt">
+deny from all
+</Files>
+<Files "ext_tables.sql">
+deny from all
+</Files>

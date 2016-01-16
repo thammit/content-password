@@ -1,0 +1,10 @@
+plugin.tx_contentpassword {
+	view {
+		# cat=plugin.tx_contentpassword/file; type=string; label=Path to template root (FE)
+		templateRootPath = EXT:content_password/Resources/Private/Templates/
+		# cat=plugin.tx_contentpassword/file; type=string; label=Path to template partials (FE)
+		partialRootPath = EXT:content_password/Resources/Private/Partials/
+		# cat=plugin.tx_contentpassword/file; type=string; label=Path to template layouts (FE)
+		layoutRootPath = EXT:content_password/Resources/Private/Layouts/
+	}
+}

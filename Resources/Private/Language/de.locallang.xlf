@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2015-09-23T12:00:00Z">
+		<body>
+			<trans-unit id="form.button.show" xml:space="preserve">
+				<source>Show</source>
+				<target>Anzeigen</target>
+			</trans-unit>
+			<trans-unit id="form.input.placeholder" xml:space="preserve">
+				<source>Password</source>
+				<target>Passwort</target>
+			</trans-unit>
+			<trans-unit id="locked.default" xml:space="preserve">
+				<source>This content requires a password.</source>
+				<target>Dieser Inhalt erfordert die Eingabe eines Passwortes.</target>
+			</trans-unit>
+			<trans-unit id="password_incorrect" xml:space="preserve">
+				<source>The password you entered was incorrect</source>
+				<target>Das eingegebene Passwort ist nicht korrekt.</target>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
