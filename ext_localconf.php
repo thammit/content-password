@@ -3,10 +3,10 @@ if (!defined('TYPO3_MODE')) {
     die('Access denied.');
 }
 
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:' . $_EXTKEY . '/Configuration/TSConfig/ContentPassword.pagets">');
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:content_password/Configuration/TSConfig/ContentPassword.pagets">');
 
 \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
-    'Qbus.' . $_EXTKEY,
+    'Qbus.ContentPassword',
     'ContentPassword',
     array(
         'ContentPassword' => 'main, unlock',

@@ -7,7 +7,7 @@
 		<p><f:translate key="locked.default" /></p>
 	</f:else>
 </f:if>
-<f:flashMessages renderMode="div" class="typo3-messages tx-content-password-form-error" />
+<f:flashMessages/>
 <f:form action="unlock" class="form-inline tx-content-password-form">
 	<div class="form-group">
 		<f:form.hidden name="unlockid" value="{contentObject.uid}"/>
