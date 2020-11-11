@@ -86,8 +86,8 @@ class ContentPasswordController extends \TYPO3\CMS\Extbase\Mvc\Controller\Action
 
         $desired_password = $cObj->data['flexform_password'];
 
-        if (!($desired_password === '' ||
-              $desired_password === $password)) {
+        $hash = password_hash($desired_password, defined('PASSWORD_ARGON2I') ? PASSWORD_ARGON2I : PASSWORD_DEFAULT);
+        if (!password_verify($password, $hash)) {
             $message = LocalizationUtility::translate('password_incorrect', 'content_password');
             $this->addFlashMessage($message, '', AbstractMessage::ERROR, false);
             $this->forward('main');
