@@ -1,15 +1,7 @@
-tt_content.gridelements_pi1.20.10.setup {
-	content_password < lib.gridelements.defaultGridSetup
-	content_password {
-		preCObject =< lib.stdheader
-		cObject =< tt_content.list.20.contentpassword_contentpassword
-	}
-}
-
 plugin.tx_contentpassword {
 	view {
-		templateRootPath = {$plugin.tx_contentpassword.view.templateRootPath}
-		partialRootPath = {$plugin.tx_contentpassword.view.partialRootPath}
-		layoutRootPath = {$plugin.tx_contentpassword.view.layoutRootPath}
+		templateRootPaths.0 = {$plugin.tx_contentpassword.view.templateRootPath}
+		partialRootPaths.0 = {$plugin.tx_contentpassword.view.partialRootPath}
+		layoutRootPaths.0 = {$plugin.tx_contentpassword.view.layoutRootPath}
 	}
 }

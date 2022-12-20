@@ -1,7 +1,6 @@
-
-<f:if condition="{contentObject.flexform_fallback_text}">
+<f:if condition="{flexFormData.fallback_text}">
 	<f:then>
-		<f:format.html>{contentObject.flexform_fallback_text}</f:format.html>
+		<f:format.html>{flexFormData.fallback_text}</f:format.html>
 	</f:then>
 	<f:else>
 		<p><f:translate key="locked.default" /></p>

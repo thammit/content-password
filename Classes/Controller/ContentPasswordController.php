@@ -1,9 +1,17 @@
 <?php
 namespace Qbus\ContentPassword\Controller;
 
+use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Messaging\AbstractMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use TYPO3\CMS\Frontend\DataProcessing\FlexFormProcessor;
+use B13\Container\DataProcessing\ContainerProcessor;
+
 
 /***************************************************************
  *
@@ -32,69 +40,70 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ContentPasswordController extends \TYPO3\CMS\Extbase\Mvc\Controller\ActionController
 {
-    /**
-     * action main
-     *
-     * @return void
-     */
-    public function mainAction()
+    public function mainAction(bool $notResponsible = false): ResponseInterface
     {
-        $cObj = $this->configurationManager->getContentObject();
-        $until = (int) $cObj->data['flexform_protection_until'];
+        $flexFormData = $this->getFlexFormData();
+        $until = (int)($flexFormData['protection_until'] ?? 0);
+        $flexFormPassword = $flexFormData['password'] ?? '';
 
-        if ($cObj->data['flexform_password'] === '') {
-            return $cObj->data['tx_gridelements_view_column_0'];
+        if ($flexFormPassword === '') {
+            return $this->renderContainerContent();
         }
 
         if ($until) {
             $timeout = $until - time();
             if ($timeout <= 0) {
-                return $cObj->data['tx_gridelements_view_column_0'];
+                return $this->renderContainerContent();
             }
             $this->setCacheMaxExpiry($timeout);
         }
 
-        if ($cObj->data['CType'] !== 'gridelements_pi1' ||
-            $cObj->data['tx_gridelements_backend_layout'] !== 'content_password') {
-            // throw exception?
-            // this controller should only be used inside the gridelement "content_password"
+        $cObj = $this->configurationManager->getContentObject();
+        $this->view->assign('contentObject', $cObj->data);
+        $this->view->assign('flexFormData', $flexFormData);
+
+        $requestParameters = $this->request->getAttribute('extbase');
+        if ($notResponsible && $requestParameters->getOriginalRequest() !== null) {
+            // extbase f:form.*** viewhelpers will treat a "original request" as a validation error,
+            // while it is just a "we are not responsible" forward in this case.
+            \Closure::bind(function() use ($requestParameters) {
+                $requestParameters->originalRequest = null;
+                $requestParameters->originalRequestMappingResults = null;
+            }, null, get_class($requestParameters))();
         }
 
-        $this->view->assign('contentObject', $cObj->data);
+        return $this->htmlResponse();
     }
 
-    /**
-     * action unlock
-     *
-     * @param  string $password
-     * @param  int    $unlockid
-     * @return void
-     */
-    public function unlockAction($password = '', $unlockid = 0)
+    public function unlockAction(string $password = '', int $unlockid = 0): ResponseInterface
     {
         $cObj = $this->configurationManager->getContentObject();
-        if ($cObj->data['CType'] !== 'gridelements_pi1' ||
-            $cObj->data['tx_gridelements_backend_layout'] !== 'content_password') {
-            // throw exception?
-            // this controller should only be used inside the gridelement "content_password"
-        }
 
-        if ($unlockid != $cObj->data['uid']) {
+        if ($unlockid !== $cObj->data['uid']) {
             // render main, another content_password element one the same page was triggered
-            $this->forward('main');
+            return (new ForwardResponse('main'))->withArguments(['notResponsible' => true]);
         }
 
-        $desired_password = $cObj->data['flexform_password'];
+        $flexFormData = $this->getFlexFormData();
+        $flexFormPassword = $flexFormData['password'] ?? '';
 
-        $hash = password_hash($desired_password, defined('PASSWORD_ARGON2I') ? PASSWORD_ARGON2I : PASSWORD_DEFAULT);
+        $hash = password_hash($flexFormPassword, defined('PASSWORD_ARGON2I') ? PASSWORD_ARGON2I : PASSWORD_DEFAULT);
         if (!password_verify($password, $hash)) {
             $message = LocalizationUtility::translate('password_incorrect', 'content_password');
             $this->addFlashMessage($message, '', AbstractMessage::ERROR, false);
-            $this->forward('main');
+            return new ForwardResponse('main');
         }
 
-        return $cObj->data['tx_gridelements_view_column_0'];
+        return $this->renderContainerContent();
     }
+
+    protected function renderContainerContent(): ResponseInterface
+    {
+        $data = $this->executeContainerDataProcessor();
+        $children = $data['children_200'] ?? [];
+        return $this->htmlResponse(implode('', array_column($children, 'renderedContent')));
+    }
+
 
     /* FIXME: This function is a HACK
      *
@@ -103,13 +112,15 @@ class ContentPasswordController extends \TYPO3\CMS\Extbase\Mvc\Controller\Action
      */
     protected function setCacheMaxExpiry($timeout)
     {
-        $current_page_timeout = (int)$GLOBALS['TSFE']->page['cache_timeout'];
+        $tsfe = $this->getTSFE();
+
+        $current_page_timeout = (int)$tsfe->page['cache_timeout'];
         if ($current_page_timeout > $timeout || $current_page_timeout == 0) {
-            $GLOBALS['TSFE']->page['cache_timeout'] = $timeout;
+            $tsfe->page['cache_timeout'] = $timeout;
         }
 
         /** @var $runtimeCache \TYPO3\CMS\Core\Cache\Frontend\AbstractFrontend */
-        $runtimeCache = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Cache\\CacheManager')->getCache('cache_runtime');
+        $runtimeCache = GeneralUtility::makeInstance(CacheManager::class)->getCache('runtime');
         $cachedCacheLifetimeIdentifier = 'core-tslib_fe-get_cache_timeout';
         $cachedCacheLifetime = $runtimeCache->get($cachedCacheLifetimeIdentifier);
 
@@ -120,5 +131,41 @@ class ContentPasswordController extends \TYPO3\CMS\Extbase\Mvc\Controller\Action
                 $runtimeCache->set($cachedCacheLifetimeIdentifier, $timeout);
             }
         }
+    }
+
+    protected function getFlexFormData(): array
+    {
+        return $this->executeFlexFormProcessor()['flexFormData'] ?? [];
+    }
+
+    protected function executeContainerDataProcessor()
+    {
+        return $this->executeProcessor(ContainerProcessor::class);
+    }
+
+    protected function executeFlexFormProcessor(): array
+    {
+        return $this->executeProcessor(FlexFormProcessor::class);
+    }
+
+    protected function executeProcessor(string $processor, array $processorConfiguration = []): array
+    {
+        $cObj = $this->configurationManager->getContentObject();
+        $variables = [
+            'data' => $cObj->data,
+            'current' => $cObj->data[$cObj->currentValKey ?? null] ?? null,
+        ];
+
+         return GeneralUtility::makeInstance($processor)->process(
+            $this->configurationManager->getContentObject(),
+            [],
+            $processorConfiguration,
+            $variables
+        );
+    }
+
+    protected function getTSFE(): TypoScriptFrontendController
+    {
+        return $this->request->getAttribute('frontend.controller');
     }
 }

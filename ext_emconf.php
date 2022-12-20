@@ -6,16 +6,16 @@ $EM_CONF[$_EXTKEY] = array(
     'category' => 'plugin',
     'author' => 'Benjamin Franzke',
     'author_email' => 'bfr@qbus.de',
-    'state' => 'beta',
+    'state' => 'stable',
     'internal' => '',
     'uploadfolder' => '0',
     'createDirs' => '',
     'clearCacheOnLoad' => 0,
-    'version' => '0.2.0',
+    'version' => '1.0.0',
     'constraints' => array(
         'depends' => array(
-            'typo3' => '6.2',
-            'gridelements' => '3.0',
+            'typo3' => '11.5.0-11.5.99',
+            'container' => '1.0.0-2.99.99',
         ),
         'conflicts' => array(
         ),

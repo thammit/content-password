@@ -1,19 +1,16 @@
 <?php
-if (!defined('TYPO3_MODE')) {
-    die('Access denied.');
-}
 
-\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:content_password/Configuration/TSConfig/ContentPassword.pagets">');
+declare(strict_types=1);
 
-\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
-    'Qbus.ContentPassword',
+use Qbus\ContentPassword\Controller\ContentPasswordController;
+use TYPO3\CMS\Extbase\Utility\ExtensionUtility;
+
+defined('TYPO3') or die();
+
+ExtensionUtility::configurePlugin(
     'ContentPassword',
-    array(
-        'ContentPassword' => 'main, unlock',
-
-    ),
-    // non-cacheable actions
-    array(
-        'ContentPassword' => 'unlock',
-    )
+    'Container',
+    [ContentPasswordController::class => 'main, unlock'],
+    [ContentPasswordController::class => 'unlock'],
+    ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT
 );
