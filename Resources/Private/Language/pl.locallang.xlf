@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <xliff version="1.0">
-	<file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2015-09-23T12:00:00Z">
+	<file source-language="en" target-language="pl" datatype="plaintext" original="messages" date="2023-06-09T12:00:00Z">
 		<body>
 			<trans-unit id="form.button.show" xml:space="preserve">
 				<source>Show</source>
